@@ -47,8 +47,8 @@ class Mp4Movie {
         track.addSample(offset, bufferInfo)
     }
 
-    fun addTrack(mediaFormat: MediaFormat, isAudio: Boolean): Int {
-        tracks.add(Track(tracks.size, mediaFormat, isAudio))
+    fun addTrack(mediaFormat: MediaFormat, isAudio: Boolean, timeScale: Int? = null): Int {
+        tracks.add(Track(tracks.size, mediaFormat, isAudio, timeScale))
         return tracks.size - 1
     }
 }

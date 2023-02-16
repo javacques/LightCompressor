@@ -14,7 +14,7 @@ import com.googlecode.mp4parser.boxes.mp4.objectdescriptors.SLConfigDescriptor
 import com.mp4parser.iso14496.part15.AvcConfigurationBox
 import java.util.*
 
-class Track(id: Int, format: MediaFormat, audio: Boolean) {
+class Track(id: Int, format: MediaFormat, audio: Boolean, sampleRate: Int? = null) {
 
     private var trackId: Long = 0
     private val samples = ArrayList<Sample>()
@@ -201,7 +201,7 @@ class Track(id: Int, format: MediaFormat, audio: Boolean) {
             sampleDurations.add(1024.toLong())
             duration = 1024
             volume = 1f
-            timeScale = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+            timeScale = sampleRate ?: format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
             handler = "soun"
             sampleDescriptionBox = SampleDescriptionBox()
 

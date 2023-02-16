@@ -103,8 +103,8 @@ class MP4Builder {
         }
     }
 
-    fun addTrack(mediaFormat: MediaFormat, isAudio: Boolean): Int =
-        currentMp4Movie.addTrack(mediaFormat, isAudio)
+    fun addTrack(mediaFormat: MediaFormat, isAudio: Boolean, timeScale: Int? = null): Int =
+        currentMp4Movie.addTrack(mediaFormat, isAudio, timeScale)
 
     @Throws(Exception::class)
     fun finishMovie() {

@@ -20,6 +20,7 @@ import com.abedelazizshe.lightcompressorlibrary.utils.StreamableVideo
 import com.abedelazizshe.lightcompressorlibrary.video.*
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.FFprobeKit
+import com.arthenica.ffmpegkit.MediaInformation
 import com.arthenica.ffmpegkit.MediaInformationSession
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -90,15 +91,9 @@ object Compressor {
         val mediaInformationSession: MediaInformationSession =
             FFprobeKit.getMediaInformation(srcUri.path)
         val mediaInformation = mediaInformationSession.mediaInformation
-        val sampleRateData =
-            mediaInformation.streams.find { it.type == "audio" }?.sampleRate
-        Log.d("IWANNAKNOW", "sample rate " +
-                "\nandroid sample rate - ${mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_SAMPLERATE)}" +
-                "\nffmpeg sample rate - $sampleRateData"
-        )
         FFmpegKit.cancel()
 
-        if (rotationData.isNullOrEmpty() || bitrateData.isNullOrEmpty() || sampleRateData.isNullOrEmpty() || durationData.isNullOrEmpty()) {
+        if (rotationData.isNullOrEmpty() || bitrateData.isNullOrEmpty() || durationData.isNullOrEmpty()) {
             // Exit execution
             return@withContext Result(
                 index,
@@ -109,7 +104,6 @@ object Compressor {
 
         var rotation = rotationData.toInt()
         val bitrate = bitrateData.toInt()
-        val sampleRate = sampleRateData.toInt()
         val duration = durationData.toLong() * 1000
 
         // Check for a min video bitrate before compression
@@ -151,7 +145,7 @@ object Compressor {
             newHeight!!,
             destination,
             newBitrate,
-            sampleRate,
+            mediaInformation,
             streamableFile,
             configuration.disableAudio,
             extractor,
@@ -168,7 +162,7 @@ object Compressor {
         newHeight: Int,
         destination: String,
         newBitrate: Int,
-        sampleRate: Int,
+        mediaInformation: MediaInformation,
         streamableFile: String?,
         disableAudio: Boolean,
         extractor: MediaExtractor,
@@ -205,8 +199,7 @@ object Compressor {
                 setOutputFileParameters(
                     inputFormat,
                     outputFormat,
-                    newBitrate,
-                    sampleRate,
+                    newBitrate
                 )
 
                 val decoder: MediaCodec
@@ -419,7 +412,8 @@ object Compressor {
                     mediaMuxer = mediaMuxer,
                     bufferInfo = bufferInfo,
                     disableAudio = disableAudio,
-                    extractor
+                    extractor,
+                    mediaInformation
                 )
 
                 extractor.release()
@@ -467,13 +461,16 @@ object Compressor {
         mediaMuxer: MP4Builder,
         bufferInfo: MediaCodec.BufferInfo,
         disableAudio: Boolean,
-        extractor: MediaExtractor
+        extractor: MediaExtractor,
+        mediaInformation: MediaInformation
     ) {
         val audioIndex = findTrack(extractor, isVideo = false)
         if (audioIndex >= 0 && !disableAudio) {
             extractor.selectTrack(audioIndex)
             val audioFormat = extractor.getTrackFormat(audioIndex)
-            val muxerTrackIndex = mediaMuxer.addTrack(audioFormat, true)
+            val audioStream = mediaInformation.streams[audioIndex]
+            val sampleRate = audioStream.sampleRate.toInt()
+            val muxerTrackIndex = mediaMuxer.addTrack(audioFormat, true, sampleRate)
             var maxBufferSize = audioFormat.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE)
 
             if (maxBufferSize <= 0) {

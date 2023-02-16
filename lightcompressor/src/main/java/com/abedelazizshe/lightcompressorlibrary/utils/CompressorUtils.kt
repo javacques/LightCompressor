@@ -67,7 +67,6 @@ object CompressorUtils {
         inputFormat: MediaFormat,
         outputFormat: MediaFormat,
         newBitrate: Int,
-        sampleRate: Int,
     ) {
         val newFrameRate = getFrameRate(inputFormat)
         val iFrameInterval = getIFrameIntervalRate(inputFormat)
@@ -81,7 +80,6 @@ object CompressorUtils {
             setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, iFrameInterval)
             // expected bps
             setInteger(MediaFormat.KEY_BIT_RATE, newBitrate)
-            setInteger(MediaFormat.KEY_SAMPLE_RATE, sampleRate)
 
             if (Build.VERSION.SDK_INT > 23) {
 
